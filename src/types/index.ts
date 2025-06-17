@@ -7,7 +7,8 @@ export interface IUT {
   telephone?: string;
   url?: string;
   notes?: string;
-  email?: string; // Ajout du champ email
+  email?: string;
+  presenceBDE?: boolean; // <-- AJOUTER CECI
 }
 
 export interface UpdateIutPayload {
@@ -15,4 +16,5 @@ export interface UpdateIutPayload {
   notes?: string;
   email?: string;
   dateDeContact?: boolean;
+  presenceBDE?: boolean; // <-- AJOUTER CECI
 }

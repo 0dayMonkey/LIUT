@@ -1,0 +1,91 @@
+/* Directives de base de Tailwind. Ne pas toucher. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Définition des variables de couleur pour notre Design System.
+  Inspiré par Factorial/iOS : beaucoup d'espace, des couleurs neutres et des accents clairs.
+*/
+@layer base {
+  /* Thème clair (par défaut) */
+  :root {
+    --background: 240 10% 99%;      /* Blanc très légèrement cassé, plus doux pour les yeux */
+    --foreground: 224 71.4% 4.1%;   /* Noir avec une pointe de bleu */
+    --card: 0 0% 100%;              /* Cartes blanches pures */
+    --card-foreground: 224 71.4% 4.1%;
+    --primary: 221.2 83.2% 53.3%;   /* Bleu Factorial */
+    --primary-foreground: 210 40% 98%;
+    --muted: 210 40% 96.1%;         /* Gris très clair pour les fonds de section */
+    --muted-foreground: 215.4 16.3% 46.9%; /* Gris pour les textes secondaires */
+    --border: 214.3 31.8% 91.4%;
+    --radius: 0.75rem;              /* Arrondi inspiré d'iOS */
+  }
+
+  /* Thème sombre */
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 47.4% 11.2%;
+    --card-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --border: 217.2 32.6% 17.5%;
+  }
+}
+
+/* Styles de base appliqués au body */
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11'; /* Améliorations typographiques */
+  }
+  h1, h2, h3 {
+    @apply font-bold tracking-tight text-foreground; /* Typo plus pro */
+  }
+}
+
+/* Nos propres classes de composants réutilisables */
+@layer components {
+  /* Le style de base pour nos cartes d'information */
+  .info-card {
+    @apply space-y-3 p-4 border rounded-lg bg-card;
+  }
+
+  /* Style pour une ligne dans une carte d'info (Téléphone, URL, etc.) */
+  .info-card-row {
+    @apply flex items-center space-x-4 text-foreground hover:text-primary transition-colors;
+  }
+  .info-card-icon {
+    @apply text-muted-foreground;
+  }
+
+  /* Style de base pour nos boutons d'action */
+  .btn {
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium;
+    @apply ring-offset-background transition-all duration-150 ease-in-out;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+    @apply h-11 px-4 py-2; /* Hauteur fixe pour un look consistant */
+  }
+   .btn:active {
+      @apply transform scale-[0.97] opacity-80;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-primary-foreground shadow hover:opacity-90;
+  }
+  
+  .btn-success {
+    @apply bg-green-600 text-white hover:bg-green-700;
+  }
+  
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700;
+  }
+
+  /* Style des inputs, épuré */
+  .input {
+    @apply mt-2 w-full bg-muted/50 border border-muted rounded-md p-2 outline-none focus:ring-2 focus:ring-primary;
+  }
+}

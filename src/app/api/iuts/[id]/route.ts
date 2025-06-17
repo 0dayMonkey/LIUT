@@ -19,7 +19,6 @@ function mapNotionPageToIUT(page: PageObjectResponse): IUT {
       props["Site/Ville"]?.type === "rich_text"
         ? props["Site/Ville"].rich_text[0]?.plain_text
         : "Non précisé",
-    // CORRECTION : On s'assure que statut est toujours une string
     statut:
       (props["Statut"]?.type === "select"
         ? props["Statut"].select?.name
@@ -36,18 +35,23 @@ function mapNotionPageToIUT(page: PageObjectResponse): IUT {
       props["Notes"]?.type === "rich_text"
         ? props["Notes"].rich_text[0]?.plain_text
         : "",
-    // CORRECTION : On s'assure que email n'est jamais null
     email:
       (props["Email"]?.type === "email" ? props["Email"].email : null) ||
       undefined,
+    // N'oubliez pas d'ajouter la lecture de votre checkbox ici si ce n'est pas déjà fait
+    presenceBDE:
+      (props["Présence BDE?"]?.type === "checkbox"
+        ? props["Présence BDE?"].checkbox
+        : false) || false,
   };
 }
 
 /**
  * Gère la récupération des détails d'un IUT spécifique.
  */
+// ========== CORRECTION APPLIQUÉE ICI ==========
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -76,14 +80,21 @@ export async function GET(
 /**
  * Gère la mise à jour d'un IUT (statut, notes, email, etc.).
  */
+// ========== CORRECTION APPLIQUÉE ICI AUSSI ==========
 export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
 ) {
   try {
     const pageId = params.id;
-    const { statut, notes, email, dateDeContact }: UpdateIutPayload =
-      await req.json();
+    // Assurez-vous que votre type UpdateIutPayload inclut `presenceBDE`
+    const {
+      statut,
+      notes,
+      email,
+      dateDeContact,
+      presenceBDE,
+    }: UpdateIutPayload = await req.json();
 
     const propertiesToUpdate: UpdatePageParameters["properties"] = {};
 
@@ -100,6 +111,10 @@ export async function PATCH(
       propertiesToUpdate["Date du contact"] = {
         date: { start: new Date().toISOString() },
       };
+    }
+    // N'oubliez pas la logique pour mettre à jour la checkbox
+    if (presenceBDE !== undefined) {
+      propertiesToUpdate["Présence BDE?"] = { checkbox: presenceBDE };
     }
 
     if (Object.keys(propertiesToUpdate).length === 0) {

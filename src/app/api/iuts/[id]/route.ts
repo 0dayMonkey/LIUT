@@ -40,6 +40,10 @@ function mapNotionPageToIUT(page: PageObjectResponse): IUT {
     email:
       (props["Email"]?.type === "email" ? props["Email"].email : null) ||
       undefined,
+<<<<<<< HEAD
+=======
+    // N'oubliez pas d'ajouter la lecture de votre checkbox ici si ce n'est pas déjà fait
+>>>>>>> 07b03e530063d0e6b4b918973b59be628bf7e42a
     presenceBDE:
       (props["Présence BDE?"]?.type === "checkbox"
         ? props["Présence BDE?"].checkbox
@@ -47,7 +51,14 @@ function mapNotionPageToIUT(page: PageObjectResponse): IUT {
   };
 }
 
+<<<<<<< HEAD
 // La fonction GET reste inchangée
+=======
+/**
+ * Gère la récupération des détails d'un IUT spécifique.
+ */
+// ========== CORRECTION APPLIQUÉE ICI ==========
+>>>>>>> 07b03e530063d0e6b4b918973b59be628bf7e42a
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -75,15 +86,26 @@ export async function GET(
   }
 }
 
+<<<<<<< HEAD
 // ===== CORRECTION FINALE APPLIQUÉE ICI =====
 // La fonction PATCH est simplifiée pour ne renvoyer qu'un statut de succès.
 // La mise à jour de l'état est gérée par le frontend.
+=======
+/**
+ * Gère la mise à jour d'un IUT (statut, notes, email, etc.).
+ */
+// ========== CORRECTION APPLIQUÉE ICI AUSSI ==========
+>>>>>>> 07b03e530063d0e6b4b918973b59be628bf7e42a
 export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
 ) {
   try {
     const pageId = params.id;
+<<<<<<< HEAD
+=======
+    // Assurez-vous que votre type UpdateIutPayload inclut `presenceBDE`
+>>>>>>> 07b03e530063d0e6b4b918973b59be628bf7e42a
     const {
       statut,
       notes,
@@ -108,6 +130,10 @@ export async function PATCH(
         date: { start: new Date().toISOString() },
       };
     }
+<<<<<<< HEAD
+=======
+    // N'oubliez pas la logique pour mettre à jour la checkbox
+>>>>>>> 07b03e530063d0e6b4b918973b59be628bf7e42a
     if (presenceBDE !== undefined) {
       propertiesToUpdate["Présence BDE?"] = { checkbox: presenceBDE };
     }

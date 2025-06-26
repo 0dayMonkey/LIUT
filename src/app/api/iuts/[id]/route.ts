@@ -1,3 +1,5 @@
+// src/app/api/iuts/[id]/route.ts
+
 import { notionClient } from "@/lib/notion";
 import { IUT, UpdateIutPayload } from "@/types";
 import {
@@ -6,7 +8,7 @@ import {
 } from "@notionhq/client/build/src/api-endpoints";
 import { NextResponse } from "next/server";
 
-// Fonction pour mapper les données brutes de Notion à notre type IUT propre
+// La fonction mapNotionPageToIUT reste inchangée
 function mapNotionPageToIUT(page: PageObjectResponse): IUT {
   const props = page.properties;
   return {
@@ -19,7 +21,6 @@ function mapNotionPageToIUT(page: PageObjectResponse): IUT {
       props["Site/Ville"]?.type === "rich_text"
         ? props["Site/Ville"].rich_text[0]?.plain_text
         : "Non précisé",
-    // CORRECTION : On s'assure que statut est toujours une string
     statut:
       (props["Statut"]?.type === "select"
         ? props["Statut"].select?.name
@@ -36,18 +37,19 @@ function mapNotionPageToIUT(page: PageObjectResponse): IUT {
       props["Notes"]?.type === "rich_text"
         ? props["Notes"].rich_text[0]?.plain_text
         : "",
-    // CORRECTION : On s'assure que email n'est jamais null
     email:
       (props["Email"]?.type === "email" ? props["Email"].email : null) ||
       undefined,
+    presenceBDE:
+      (props["Présence BDE?"]?.type === "checkbox"
+        ? props["Présence BDE?"].checkbox
+        : false) || false,
   };
 }
 
-/**
- * Gère la récupération des détails d'un IUT spécifique.
- */
+// La fonction GET reste inchangée
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -73,17 +75,22 @@ export async function GET(
   }
 }
 
-/**
- * Gère la mise à jour d'un IUT (statut, notes, email, etc.).
- */
+// ===== CORRECTION FINALE APPLIQUÉE ICI =====
+// La fonction PATCH est simplifiée pour ne renvoyer qu'un statut de succès.
+// La mise à jour de l'état est gérée par le frontend.
 export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
 ) {
   try {
     const pageId = params.id;
-    const { statut, notes, email, dateDeContact }: UpdateIutPayload =
-      await req.json();
+    const {
+      statut,
+      notes,
+      email,
+      dateDeContact,
+      presenceBDE,
+    }: UpdateIutPayload = await req.json();
 
     const propertiesToUpdate: UpdatePageParameters["properties"] = {};
 
@@ -100,6 +107,9 @@ export async function PATCH(
       propertiesToUpdate["Date du contact"] = {
         date: { start: new Date().toISOString() },
       };
+    }
+    if (presenceBDE !== undefined) {
+      propertiesToUpdate["Présence BDE?"] = { checkbox: presenceBDE };
     }
 
     if (Object.keys(propertiesToUpdate).length === 0) {

@@ -3,7 +3,10 @@
 import { NextResponse } from "next/server";
 import { notionClient } from "@/lib/notion";
 import { IUT } from "@/types";
-import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
+import {
+  PageObjectResponse,
+  QueryDatabaseResponse,
+} from "@notionhq/client/build/src/api-endpoints";
 
 export const dynamic = "force-dynamic";
 
@@ -14,37 +17,50 @@ export async function GET() {
     }
     const databaseId = process.env.NOTION_DATABASE_ID;
 
-    const response = await notionClient.databases.query({
-      database_id: databaseId,
-      filter: {
-        or: [
-          {
-            property: "Statut",
-            select: {
-              does_not_equal: "✅ Terminé (Contact obtenu)",
-            },
-          },
-          {
-            property: "Statut",
-            select: {
-              does_not_equal: "❌ Clôturé (Sans réponse/refus)",
-            },
-          },
-        ],
-      },
-      sorts: [
-        {
-          property: "Statut",
-          direction: "ascending",
-        },
-      ],
-    });
+    // ===== CORRECTION: let a été remplacé par const pour corriger l'erreur ESLint =====
+    const allResults: PageObjectResponse[] = [];
+    let hasMore = true;
+    let startCursor: string | undefined = undefined;
 
-    const fullPages = response.results.filter(
-      (page): page is PageObjectResponse => "properties" in page
-    );
+    while (hasMore) {
+      const response: QueryDatabaseResponse =
+        await notionClient.databases.query({
+          database_id: databaseId,
+          filter: {
+            and: [
+              {
+                property: "Statut",
+                select: {
+                  does_not_equal: "✅ Terminé (Info obtenu)",
+                },
+              },
+              {
+                property: "Statut",
+                select: {
+                  does_not_equal: "❌ Clôturé (Sans réponse/refus)",
+                },
+              },
+            ],
+          },
+          sorts: [
+            {
+              property: "Statut",
+              direction: "ascending",
+            },
+          ],
+          start_cursor: startCursor,
+        });
 
-    const iuts: IUT[] = fullPages.map((page) => {
+      const pageResults = response.results.filter(
+        (page): page is PageObjectResponse => "properties" in page
+      );
+      allResults.push(...pageResults);
+
+      hasMore = response.has_more;
+      startCursor = response.next_cursor ?? undefined;
+    }
+
+    const iuts: IUT[] = allResults.map((page) => {
       const { properties } = page;
 
       const region =
@@ -62,7 +78,6 @@ export async function GET() {
           ? properties["Statut"].select?.name
           : undefined) ?? "Non défini";
 
-      // ===== LES LIGNES CORRIGÉES SONT ICI =====
       const telephone =
         (properties["Téléphone"]?.type === "phone_number"
           ? properties["Téléphone"].phone_number
@@ -72,14 +87,29 @@ export async function GET() {
         (properties["URL Site Web"]?.type === "url"
           ? properties["URL Site Web"].url
           : null) || undefined;
-      // ==========================================
 
-      return { id: page.id, region, ville, statut, telephone, url };
+      const presenceBDE =
+        (properties["Présence BDE?"]?.type === "checkbox"
+          ? properties["Présence BDE?"].checkbox
+          : false) || false;
+
+      return {
+        id: page.id,
+        region,
+        ville,
+        statut,
+        telephone,
+        url,
+        presenceBDE,
+      };
     });
 
     return NextResponse.json(iuts);
   } catch (error) {
     console.error("Failed to fetch IUTs:", error);
+    if (error instanceof Error) {
+      return NextResponse.json({ message: error.message }, { status: 500 });
+    }
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 }

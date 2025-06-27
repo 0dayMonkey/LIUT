@@ -17,7 +17,6 @@ export async function GET() {
     }
     const databaseId = process.env.NOTION_DATABASE_ID;
 
-    // ===== CORRECTION: let a été remplacé par const pour corriger l'erreur ESLint =====
     const allResults: PageObjectResponse[] = [];
     let hasMore = true;
     let startCursor: string | undefined = undefined;
@@ -26,22 +25,7 @@ export async function GET() {
       const response: QueryDatabaseResponse =
         await notionClient.databases.query({
           database_id: databaseId,
-          filter: {
-            and: [
-              {
-                property: "Statut",
-                select: {
-                  does_not_equal: "✅ Terminé (Info obtenu)",
-                },
-              },
-              {
-                property: "Statut",
-                select: {
-                  does_not_equal: "❌ Clôturé (Sans réponse/refus)",
-                },
-              },
-            ],
-          },
+          // CORRECTION : Filtre supprimé pour TOUT récupérer
           sorts: [
             {
               property: "Statut",
@@ -63,44 +47,40 @@ export async function GET() {
     const iuts: IUT[] = allResults.map((page) => {
       const { properties } = page;
 
-      const region =
-        properties["REGION"]?.type === "title"
-          ? properties["REGION"].title[0]?.plain_text
-          : "Sans nom";
-
-      const ville =
-        properties["Site/Ville"]?.type === "rich_text"
-          ? properties["Site/Ville"].rich_text[0]?.plain_text
-          : "Non précisé";
-
-      const statut =
-        (properties["Statut"]?.type === "select"
-          ? properties["Statut"].select?.name
-          : undefined) ?? "Non défini";
-
-      const telephone =
-        (properties["Téléphone"]?.type === "phone_number"
-          ? properties["Téléphone"].phone_number
-          : null) || undefined;
-
-      const url =
-        (properties["URL Site Web"]?.type === "url"
-          ? properties["URL Site Web"].url
-          : null) || undefined;
-
-      const presenceBDE =
-        (properties["Présence BDE?"]?.type === "checkbox"
-          ? properties["Présence BDE?"].checkbox
-          : false) || false;
+      // CORRECTION : Ajout de la lecture des `formationsCles`
+      const formationsCles =
+        properties["Formations Clés"]?.type === "multi_select"
+          ? properties["Formations Clés"].multi_select
+          : [];
 
       return {
         id: page.id,
-        region,
-        ville,
-        statut,
-        telephone,
-        url,
-        presenceBDE,
+        region:
+          properties["REGION"]?.type === "title"
+            ? properties["REGION"].title[0]?.plain_text
+            : "Sans nom",
+        ville:
+          properties["Site/Ville"]?.type === "rich_text"
+            ? properties["Site/Ville"].rich_text[0]?.plain_text
+            : "Non précisé",
+        statut:
+          (properties["Statut"]?.type === "select"
+            ? properties["Statut"].select?.name
+            : undefined) ?? "Non défini",
+        telephone:
+          (properties["Téléphone"]?.type === "phone_number"
+            ? properties["Téléphone"].phone_number
+            : null) || undefined,
+        url:
+          (properties["URL Site Web"]?.type === "url"
+            ? properties["URL Site Web"].url
+            : null) || undefined,
+        presenceBDE:
+          (properties["Présence BDE?"]?.type === "checkbox"
+            ? properties["Présence BDE?"].checkbox
+            : false) || false,
+        // Ajout du champ manquant dans l'objet retourné
+        formationsCles: formationsCles,
       };
     });
 

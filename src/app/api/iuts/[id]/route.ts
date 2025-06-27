@@ -8,9 +8,15 @@ import {
 } from "@notionhq/client/build/src/api-endpoints";
 import { NextResponse } from "next/server";
 
-// La fonction mapNotionPageToIUT reste inchangée
 function mapNotionPageToIUT(page: PageObjectResponse): IUT {
   const props = page.properties;
+
+  // CORRECTION : Ajout de la lecture des `formationsCles`
+  const formationsCles =
+    props["Formations Clés"]?.type === "multi_select"
+      ? props["Formations Clés"].multi_select
+      : [];
+
   return {
     id: page.id,
     region:
@@ -44,10 +50,11 @@ function mapNotionPageToIUT(page: PageObjectResponse): IUT {
       (props["Présence BDE?"]?.type === "checkbox"
         ? props["Présence BDE?"].checkbox
         : false) || false,
+    // Ajout du champ manquant dans l'objet retourné
+    formationsCles: formationsCles,
   };
 }
 
-// La fonction GET reste inchangée
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -75,9 +82,6 @@ export async function GET(
   }
 }
 
-// ===== CORRECTION FINALE APPLIQUÉE ICI =====
-// La fonction PATCH est simplifiée pour ne renvoyer qu'un statut de succès.
-// La mise à jour de l'état est gérée par le frontend.
 export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
